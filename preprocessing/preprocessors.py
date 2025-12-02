@@ -97,7 +97,7 @@ def preprocess_data():
     df = load_dataset(file_name=config.TRAINING_DATA_FILE)
     # get data after 2009
     df['datadate'] = pd.to_datetime(df['datadate'], format='%Y%m%d')
-    df = df[df.datadate>=pd.to_datetime('2019-01-01').strftime('%Y%m%d')]
+    df = df[df.datadate>=pd.to_datetime('2009-01-01').strftime('%Y%m%d')]
     # calcualte adjusted price
     df_preprocess = calcualte_price(df)
     # add technical indicators using stockstats
@@ -123,41 +123,75 @@ def calcualte_turbulence(df):
     """calculate turbulence index based on dow 30"""
     # can add other market assets
     
-    df_price_pivot=df.pivot(index='datadate', columns='tic', values='adjcp')
+    df_price_pivot = df.pivot(index='datadate', columns='tic', values='adjcp')
     unique_date = df.datadate.unique()
+    
     # start after a year
     start = 252
-    turbulence_index = [0]*start
-    #turbulence_index = [0]
-    count=0
-    for i in range(start,len(unique_date)):
+    turbulence_index = [0] * start
+    count = 0
+    
+    for i in range(start, len(unique_date)):
         current_price = df_price_pivot[df_price_pivot.index == unique_date[i]]
-        hist_price = df_price_pivot[[n in unique_date[0:i] for n in df_price_pivot.index ]]
-        cov_temp = hist_price.cov()
-        current_temp=(current_price - np.mean(hist_price,axis=0))
-        temp = current_temp.values.dot(np.linalg.inv(cov_temp)).dot(current_temp.values.T)
-        if temp>0:
-            count+=1
-            if count>2:
-                turbulence_temp = temp[0][0]
+        hist_price = df_price_pivot[[n in unique_date[0:i] for n in df_price_pivot.index]]
+        
+        # Check if we have enough historical data
+        if len(hist_price) < 2:
+            turbulence_index.append(0)
+            continue
+        
+        # Remove columns with all NaN values
+        hist_price = hist_price.dropna(axis=1, how='all')
+        current_price = current_price[hist_price.columns]
+        
+        # Check if we still have data after dropping NaN columns
+        if hist_price.empty or current_price.empty or len(hist_price.columns) == 0:
+            turbulence_index.append(0)
+            continue
+        
+        try:
+            # Calculate covariance matrix
+            cov_temp = hist_price.cov()
+            
+            # Check if covariance matrix is valid (not all NaN)
+            if cov_temp.isnull().all().all():
+                turbulence_index.append(0)
+                continue
+            
+            # Calculate mean
+            mean_hist = np.mean(hist_price, axis=0)
+            
+            # Check for NaN in mean
+            if np.isnan(mean_hist).any():
+                turbulence_index.append(0)
+                continue
+            
+            current_temp = (current_price - mean_hist)
+            
+            # Calculate turbulence using Mahalanobis distance
+            temp = current_temp.values.dot(np.linalg.pinv(cov_temp)).dot(current_temp.values.T)
+            
+            # Check if temp is valid (not NaN or inf)
+            if np.isnan(temp).any() or np.isinf(temp).any():
+                turbulence_index.append(0)
+                continue
+            
+            if temp > 0:
+                count += 1
+                if count > 2:
+                    turbulence_temp = temp[0][0]
+                else:
+                    # avoid large outlier because of the calculation just begins
+                    turbulence_temp = 0
             else:
-                #avoid large outlier because of the calculation just begins
-                turbulence_temp=0
-        else:
-            turbulence_temp=0
+                turbulence_temp = 0
+                
+        except (np.linalg.LinAlgError, ValueError, IndexError):
+            # Handle singular matrix or other calculation errors
+            turbulence_temp = 0
+        
         turbulence_index.append(turbulence_temp)
     
-    
-    turbulence_index = pd.DataFrame({'datadate':df_price_pivot.index,
-                                     'turbulence':turbulence_index})
+    turbulence_index = pd.DataFrame({'datadate': df_price_pivot.index,
+                                     'turbulence': turbulence_index})
     return turbulence_index
-
-
-
-
-
-
-
-
-
-
