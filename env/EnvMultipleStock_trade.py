@@ -120,6 +120,9 @@ class StockEnvTrade(gym.Env):
         if self.terminal:
             # EDIT THIS TO FIX GRAPHS
             plt.plot(self.asset_memory,'r')
+            plt.xlabel('Date Index')
+            plt.xlabel('Account Value (millions of $)')
+            plt.title('Trading Account Value over Time')
             plt.savefig('results/account_value_trade_{}_{}.png'.format(self.model_name, self.iteration))
             plt.close()
             df_total_value = pd.DataFrame(self.asset_memory)
@@ -143,8 +146,8 @@ class StockEnvTrade(gym.Env):
             df_rewards.to_csv('results/account_rewards_trade_{}_{}.csv'.format(self.model_name, self.iteration))
             
             # print('total asset: {}'.format(self.state[0]+ sum(np.array(self.state[1:29])*np.array(self.state[29:]))))
-            #with open('obs.pkl', 'wb') as f:  
-            #    pickle.dump(self.state, f)
+            with open('obs.pkl', 'wb') as f:  
+                pickle.dump(self.state, f)
             
             return self.state, self.reward, self.terminal,{}
 

@@ -95,6 +95,9 @@ class StockEnvTrain(gym.Env):
         if self.terminal:
             # EDIT THIS TO FIX GRAPHS
             plt.plot(self.asset_memory,'r')
+            plt.xlabel('Date Index')
+            plt.xlabel('Account Value (millions of $)')
+            plt.title('Training Account Value over Time')
             plt.savefig('results/account_value_train.png')
             plt.close()
             end_total_asset = self.state[0]+ \
@@ -116,8 +119,8 @@ class StockEnvTrain(gym.Env):
             #df_rewards.to_csv('results/account_rewards_train.csv')
             
             # print('total asset: {}'.format(self.state[0]+ sum(np.array(self.state[1:29])*np.array(self.state[29:]))))
-            #with open('obs.pkl', 'wb') as f:  
-            #    pickle.dump(self.state, f)
+            with open('obs.pkl', 'wb') as f:
+                pickle.dump(self.state, f)
             
             return self.state, self.reward, self.terminal,{}
 

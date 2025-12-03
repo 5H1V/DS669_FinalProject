@@ -116,6 +116,9 @@ class StockEnvValidation(gym.Env):
 
         if self.terminal:
             plt.plot(self.asset_memory,'r')
+            plt.xlabel('Date Index')
+            plt.xlabel('Account Value (millions of $)')
+            plt.title('Validation Account Value over Time')
             plt.savefig('results/account_value_validation_{}.png'.format(self.iteration))
             plt.close()
             df_total_value = pd.DataFrame(self.asset_memory)
@@ -133,14 +136,14 @@ class StockEnvValidation(gym.Env):
             df_total_value['daily_return']=df_total_value.pct_change(1)
             sharpe = (4**0.5)*df_total_value['daily_return'].mean()/ \
                   df_total_value['daily_return'].std()
-            #print("Sharpe: ",sharpe)
+            print("Sharpe: ",sharpe)
             
             #df_rewards = pd.DataFrame(self.rewards_memory)
             #df_rewards.to_csv('results/account_rewards_trade_{}.csv'.format(self.iteration))
             
             # print('total asset: {}'.format(self.state[0]+ sum(np.array(self.state[1:29])*np.array(self.state[29:]))))
-            #with open('obs.pkl', 'wb') as f:  
-            #    pickle.dump(self.state, f)
+            with open('obs.pkl', 'wb') as f:  
+                pickle.dump(self.state, f)
             
             return self.state, self.reward, self.terminal,{}
 
