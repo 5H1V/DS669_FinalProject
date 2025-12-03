@@ -3,7 +3,7 @@ import datetime
 import os
 
 # Use timestamp in a Windows-safe format
-now = datetime.datetime.now()
+now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 # Define directories
 TRAINED_MODEL_DIR = os.path.join("trained_models", now)
