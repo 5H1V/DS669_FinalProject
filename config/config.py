@@ -1,4 +1,3 @@
-import pandas as pd
 import datetime
 import os
 
@@ -7,9 +6,12 @@ now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 # Define directories
 TRAINED_MODEL_DIR = os.path.join("trained_models", now)
-TURBULENCE_DATA = "data/dow30_turbulence_index.csv"
-TESTING_DATA_FILE = "test.csv"
-TRAINING_DATA_FILE = "data/dow_30_2009_2025.csv"
+
+HMAX_NORMALIZE = 100
+INITIAL_ACCOUNT_BALANCE = 1000000
+STOCK_DIM = 30
+TRANSACTION_FEE_PERCENT = 0.001
+REWARD_SCALING = 1e-4
 
 # Create folders if they don’t exist
 os.makedirs(TRAINED_MODEL_DIR, exist_ok=True)
