@@ -20,7 +20,7 @@ def train_A2C(env_train, model_name, timesteps=25000):
     model.learn(total_timesteps=timesteps)
     end = time.time()
     model.save(f"trained_models/{model_name}")
-    print(f'  Training time (A2C): {(end - start) / 60:.2f} minutes')
+    print(f'Training time (A2C): {(end - start) / 60:.2f} minutes')
     return model
 
 
@@ -31,7 +31,7 @@ def train_PPO(env_train, model_name, timesteps=50000):
     model.learn(total_timesteps=timesteps)
     end = time.time()
     model.save(f"trained_models/{model_name}")
-    print(f'  Training time (PPO): {(end - start) / 60:.2f} minutes')
+    print(f'Training time (PPO): {(end - start) / 60:.2f} minutes')
     return model
 
 
@@ -42,14 +42,13 @@ def train_DDPG(env_train, model_name, timesteps=10000):
         mean=np.zeros(n_actions),
         sigma=float(0.5) * np.ones(n_actions)
     )
-    
     start = time.time()
     model = DDPG('MlpPolicy', env_train, param_noise=None, action_noise=action_noise)
     model.learn(total_timesteps=timesteps)
     end = time.time()
     
-    model.save(f"trained_models/{model_name}")
-    print(f'  Training time (DDPG): {(end - start) / 60:.2f} minutes')
+    model.save(f"{TRAINED_MODEL_DIR}/{model_name}")
+    print(f'Training time (DDPG): {(end - start) / 60:.2f} minutes')
     return model
 
 def data_split(df, start, end):
@@ -111,18 +110,9 @@ def DRL_prediction(df, model, name, last_state, iter_num, unique_trade_date,
     
     return last_state
 
-def run_er_adaptive_ensemble(data_file='done_data_2025.csv'):
-    """
-    MAIN FUNCTION: Run complete ER-adaptive ensemble strategy
-    """
-    
-    print("="*80)
-    print("EFFICIENCY RATIO ADAPTIVE ENSEMBLE TRADING SYSTEM")
-    print("="*80)
-    
-    # Load data
-    print("\n📂 Loading data...")
-    data = pd.read_csv(data_file, index_col=0)
+def run_er_adaptive_ensemble(data):
+
+    print("\nLoading data...")
     print(f"Loaded {len(data)} rows")
     print(f"Date range: {data['datadate'].min()} to {data['datadate'].max()}")
     print(f"Unique dates: {data['datadate'].nunique()}")
@@ -153,10 +143,7 @@ def run_er_adaptive_ensemble(data_file='done_data_2025.csv'):
     print(f"Base turbulence threshold: {base_turbulence}")
     
     # Initialize ER manager
-    threshold_manager = AdaptiveThresholdManager(
-        base_turbulence_threshold=base_turbulence,
-        er_lookback=20
-    )
+    threshold_manager = AdaptiveThresholdManager(base_turbulence_threshold=base_turbulence, er_lookback=20)
     
     # Tracking variables
     last_state_ensemble = []
@@ -242,10 +229,10 @@ def run_er_adaptive_ensemble(data_file='done_data_2025.csv'):
             best_model_name = max(weighted_sharpes, key=weighted_sharpes.get)
             model_ensemble = {'PPO': model_ppo, 'A2C': model_a2c, 'DDPG': model_ddpg}[best_model_name]
             
-            print(f"\n🏆 SELECTED: {best_model_name}")
+            print(f"\nSELECTED: {best_model_name}")
             
             # Trading
-            print(f"\n💰 TRADING...")
+            print(f"\nTRADING...")
             last_state_ensemble = DRL_prediction(
                 data, model_ensemble, best_model_name, last_state_ensemble,
                 i, unique_trade_date, rebalance_window, turbulence_threshold, initial
